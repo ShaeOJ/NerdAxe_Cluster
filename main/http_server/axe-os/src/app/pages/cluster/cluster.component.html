@@ -1,0 +1,449 @@
+<ng-container>
+
+  <!-- Configuration Card -->
+  <nb-card>
+    <nb-card-header>{{ 'CLUSTER.TITLE' | translate }}</nb-card-header>
+    <nb-card-body>
+      <div class="config-row">
+        <div class="config-field">
+          <label>{{ 'CLUSTER.MODE' | translate }}</label>
+          <nb-select [(selected)]="editMode" size="small">
+            <nb-option [value]="0">{{ 'CLUSTER.DISABLED' | translate }}</nb-option>
+            <nb-option [value]="1">{{ 'CLUSTER.MASTER' | translate }}</nb-option>
+            <nb-option [value]="2">{{ 'CLUSTER.SLAVE' | translate }}</nb-option>
+          </nb-select>
+        </div>
+        <div class="config-field">
+          <label>{{ 'CLUSTER.CHANNEL' | translate }}</label>
+          <input nbInput type="number" [(ngModel)]="editChannel" min="1" max="14" size="small" class="channel-input" />
+        </div>
+        <div class="config-actions">
+          <button nbButton status="primary" size="small" (click)="saveConfig()">
+            {{ 'COMMON.SAVE' | translate }}
+          </button>
+          <button *ngIf="pendingRestart" nbButton status="warning" size="small" (click)="restart()">
+            {{ 'CLUSTER.RESTART_REQUIRED' | translate }}
+          </button>
+        </div>
+      </div>
+      <div *ngIf="pendingRestart" class="restart-msg">
+        {{ 'CLUSTER.MODE_CHANGE_MSG' | translate }}
+      </div>
+    </nb-card-body>
+  </nb-card>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="text-center p-4">
+    <nb-spinner status="primary" size="large"></nb-spinner>
+  </div>
+
+  <!-- Disabled Mode -->
+  <nb-card *ngIf="!loading && clusterStatus?.mode === 'disabled'">
+    <nb-card-body class="disabled-body">
+      <nb-icon icon="power-outline" pack="eva" class="disabled-icon"></nb-icon>
+      <p>{{ 'CLUSTER.DISABLED_MSG' | translate }}</p>
+    </nb-card-body>
+  </nb-card>
+
+  <!-- ==================== MASTER MODE DASHBOARD ==================== -->
+  <ng-container *ngIf="!loading && clusterStatus?.mode === 'master'">
+
+    <!-- Watchdog Card -->
+    <nb-card *ngIf="watchdogStatus" class="watchdog-card"
+             [class.watchdog-alert]="watchdogStatus.throttled_count > 0">
+      <nb-card-body>
+        <div class="watchdog-header">
+          <div class="watchdog-title-row">
+            <nb-icon icon="shield-outline" pack="eva" class="watchdog-icon"
+                     [class.watchdog-icon-alert]="watchdogStatus.throttled_count > 0"
+                     [class.watchdog-icon-ok]="watchdogStatus.enabled && watchdogStatus.throttled_count === 0">
+            </nb-icon>
+            <span class="watchdog-title">Safety Watchdog</span>
+            <nb-badge *ngIf="watchdogStatus.throttled_count > 0"
+                      [text]="watchdogStatus.throttled_count + ' throttled'"
+                      status="danger">
+            </nb-badge>
+            <nb-badge *ngIf="watchdogStatus.enabled && watchdogStatus.throttled_count === 0"
+                      text="OK" status="success">
+            </nb-badge>
+            <nb-badge *ngIf="!watchdogStatus.enabled" text="Disabled" status="basic"></nb-badge>
+          </div>
+          <button nbButton size="small"
+                  [status]="watchdogStatus.enabled ? 'danger' : 'primary'"
+                  [disabled]="watchdogTogglingEnabled"
+                  (click)="toggleWatchdog()">
+            {{ watchdogStatus.enabled ? 'Disable' : 'Enable' }}
+          </button>
+        </div>
+
+        <div class="watchdog-thresholds">
+          <small>Throttle when: Temp ≥ 68°C or Vin ≤ 4.9V &nbsp;·&nbsp; Recover after 30s stable below 62°C / above 5.1V</small>
+        </div>
+
+        <!-- Master device status -->
+        <div class="watchdog-device-row" *ngIf="watchdogStatus.master">
+          <span class="watchdog-device-name">Master</span>
+          <span class="watchdog-temp">{{ watchdogStatus.master.last_temp | number:'1.0-1' }}°C</span>
+          <span class="watchdog-vin">{{ watchdogStatus.master.last_vin | number:'1.2-2' }}V</span>
+          <span class="watchdog-freq">{{ watchdogStatus.master.current_frequency }} MHz</span>
+          <nb-badge *ngIf="watchdogStatus.master.is_throttled"
+                    [text]="'↓ ' + getThrottleReasonLabel(watchdogStatus.master.throttle_reason)"
+                    status="danger">
+          </nb-badge>
+          <nb-badge *ngIf="watchdogStatus.master.is_recovering" text="Recovering" status="warning"></nb-badge>
+        </div>
+
+        <!-- Active slave statuses -->
+        <div class="watchdog-device-row" *ngFor="let s of watchdogStatus.slaves">
+          <span class="watchdog-device-name">{{ s.hostname }}</span>
+          <span class="watchdog-temp">{{ s.last_temp | number:'1.0-1' }}°C</span>
+          <span class="watchdog-vin">{{ s.last_vin | number:'1.2-2' }}V</span>
+          <span class="watchdog-freq">{{ s.current_frequency }} MHz</span>
+          <nb-badge *ngIf="s.is_throttled"
+                    [text]="'↓ ' + getThrottleReasonLabel(s.throttle_reason)"
+                    status="danger">
+          </nb-badge>
+          <nb-badge *ngIf="s.is_recovering" text="Recovering" status="warning"></nb-badge>
+        </div>
+      </nb-card-body>
+    </nb-card>
+
+    <!-- Stats Row (5 cards) -->
+    <div class="stats-row">
+
+      <!-- Slaves Card -->
+      <nb-card class="stat-card">
+        <nb-card-body>
+          <div class="stat-card-inner">
+            <div class="stat-info">
+              <span class="stat-value">{{ clusterStatus.active_slaves || 0 }}</span>
+              <span class="stat-label">{{ 'CLUSTER.ACTIVE_SLAVES' | translate }}</span>
+            </div>
+            <div class="stat-icon-circle bg-blue">
+              <nb-icon icon="people-outline" pack="eva"></nb-icon>
+            </div>
+          </div>
+        </nb-card-body>
+      </nb-card>
+
+      <!-- Total Hashrate Card -->
+      <nb-card class="stat-card">
+        <nb-card-body>
+          <div class="stat-card-inner">
+            <div class="stat-info">
+              <span class="stat-value">{{ formatHashrate(clusterStatus.total_hashrate || 0) }}</span>
+              <span class="stat-label">{{ 'CLUSTER.TOTAL_HASHRATE' | translate }}</span>
+            </div>
+            <div class="stat-icon-circle bg-orange">
+              <nb-icon icon="flash-outline" pack="eva"></nb-icon>
+            </div>
+          </div>
+        </nb-card-body>
+      </nb-card>
+
+      <!-- Total Shares Card -->
+      <nb-card class="stat-card">
+        <nb-card-body>
+          <div class="stat-card-inner">
+            <div class="stat-info">
+              <span class="stat-value">{{ getTotalShares().accepted | number:'1.0-0' }}
+                <small class="stat-rejected" *ngIf="getTotalShares().rejected > 0">/ {{ getTotalShares().rejected | number:'1.0-0' }} rej</small>
+              </span>
+              <span class="stat-label">{{ 'CLUSTER.TOTAL_SHARES' | translate }}</span>
+            </div>
+            <div class="stat-icon-circle bg-green">
+              <nb-icon icon="navigation-2-outline" pack="eva"></nb-icon>
+            </div>
+          </div>
+        </nb-card-body>
+      </nb-card>
+
+      <!-- Best Difficulty Card -->
+      <nb-card class="stat-card">
+        <nb-card-body>
+          <div class="stat-card-inner">
+            <div class="stat-info">
+              <span class="stat-value">{{ formatDiff(clusterStatus.bestDiff) }}</span>
+              <span class="stat-label">Best Difficulty</span>
+            </div>
+            <div class="stat-icon-circle bg-gold">
+              <nb-icon icon="star-outline" pack="eva"></nb-icon>
+            </div>
+          </div>
+        </nb-card-body>
+      </nb-card>
+
+      <!-- Total Power Card -->
+      <nb-card class="stat-card">
+        <nb-card-body>
+          <div class="stat-card-inner">
+            <div class="stat-info">
+              <span class="stat-value">{{ getTotalPower() | number:'1.1-1' }} <small>W</small></span>
+              <span class="stat-label">{{ 'CLUSTER.TOTAL_POWER' | translate }}</span>
+            </div>
+            <div class="stat-icon-circle bg-purple">
+              <nb-icon icon="flash-outline" pack="eva"></nb-icon>
+            </div>
+          </div>
+        </nb-card-body>
+      </nb-card>
+
+      <!-- Cluster Efficiency Card -->
+      <nb-card class="stat-card">
+        <nb-card-body>
+          <div class="stat-card-inner">
+            <div class="stat-info">
+              <span class="stat-value">{{ getClusterEfficiency() }}</span>
+              <span class="stat-label">Efficiency</span>
+            </div>
+            <div class="stat-icon-circle bg-teal">
+              <nb-icon icon="trending-down-outline" pack="eva"></nb-icon>
+            </div>
+          </div>
+        </nb-card-body>
+      </nb-card>
+
+    </div>
+
+    <!-- Master Device Card -->
+    <nb-card *ngIf="clusterStatus.master" class="device-card">
+      <nb-card-header class="device-card-header">
+        <span>{{ 'CLUSTER.MASTER_DEVICE' | translate }}</span>
+        <nb-badge text="{{ 'CLUSTER.THIS_DEVICE' | translate }}" status="info"></nb-badge>
+      </nb-card-header>
+      <nb-card-body>
+        <div class="device-hostname">{{ clusterStatus.master.hostname }}</div>
+        <div class="metric-grid">
+          <div class="metric-item">
+            <nb-icon icon="flash-outline" pack="eva" class="metric-icon"></nb-icon>
+            <span class="metric-label">{{ 'CLUSTER.HASHRATE' | translate }}</span>
+            <span class="metric-value">{{ formatHashrate(clusterStatus.master.hashrate) }}</span>
+          </div>
+          <div class="metric-item">
+            <nb-icon icon="thermometer-outline" pack="eva" class="metric-icon"></nb-icon>
+            <span class="metric-label">{{ 'CLUSTER.TEMP' | translate }}</span>
+            <span class="metric-value" [ngClass]="getTempClass(clusterStatus.master.temp)">
+              {{ clusterStatus.master.temp | number:'1.0-1' }}<small>°C</small>
+            </span>
+          </div>
+          <div class="metric-item">
+            <nb-icon icon="flash-outline" pack="eva" class="metric-icon"></nb-icon>
+            <span class="metric-label">{{ 'CLUSTER.POWER' | translate }}</span>
+            <span class="metric-value">{{ clusterStatus.master.power | number:'1.1-1' }} <small>W</small></span>
+          </div>
+          <div class="metric-item">
+            <nb-icon icon="activity-outline" pack="eva" class="metric-icon"></nb-icon>
+            <span class="metric-label">{{ 'CLUSTER.FREQUENCY' | translate }}</span>
+            <span class="metric-value">{{ clusterStatus.master.frequency | number:'1.0-0' }} <small>MHz</small></span>
+          </div>
+          <div class="metric-item">
+            <nb-icon icon="charging-outline" pack="eva" class="metric-icon"></nb-icon>
+            <span class="metric-label">{{ 'CLUSTER.VOLTAGE' | translate }}</span>
+            <span class="metric-value">{{ clusterStatus.master.core_voltage | number:'1.0-0' }} <small>mV</small></span>
+          </div>
+          <div class="metric-item">
+            <nb-icon icon="wind-outline" pack="eva" class="metric-icon"></nb-icon>
+            <span class="metric-label">{{ 'CLUSTER.FAN' | translate }}</span>
+            <span class="metric-value">{{ clusterStatus.master.fan_rpm | number:'1.0-0' }} <small>RPM</small></span>
+          </div>
+          <div class="metric-item">
+            <nb-icon icon="flash-outline" pack="eva" class="metric-icon"></nb-icon>
+            <span class="metric-label">Vin</span>
+            <span class="metric-value">{{ clusterStatus.master.voltage_in | number:'1.2-2' }} <small>V</small></span>
+          </div>
+          <div class="metric-item">
+            <nb-icon icon="trending-down-outline" pack="eva" class="metric-icon"></nb-icon>
+            <span class="metric-label">Efficiency</span>
+            <span class="metric-value">{{ getDeviceEfficiency(clusterStatus.master.power, clusterStatus.master.hashrate) }}</span>
+          </div>
+        </div>
+      </nb-card-body>
+    </nb-card>
+
+    <!-- Connected Slaves Section -->
+    <div class="section-header">
+      <h6>{{ 'CLUSTER.SLAVES' | translate }} ({{ clusterStatus.slaves?.length || 0 }})</h6>
+    </div>
+
+    <ng-container *ngIf="clusterStatus.slaves && clusterStatus.slaves.length; else noSlaves">
+      <nb-card *ngFor="let slave of clusterStatus.slaves" class="device-card slave-card">
+        <nb-card-header class="device-card-header">
+          <div class="slave-header-info">
+            <span class="slave-hostname">{{ slave.hostname }}</span>
+            <nb-badge text="Slave #{{ slave.id }}" status="basic"></nb-badge>
+            <nb-badge *ngIf="slave.state"
+              [text]="slave.state"
+              [status]="getStateStatus(slave.state)">
+            </nb-badge>
+          </div>
+          <div class="slave-header-right">
+            <span class="slave-last-seen" *ngIf="slave.last_seen !== undefined">
+              {{ formatLastSeen(slave.last_seen) }}
+            </span>
+            <a class="slave-ip slave-ip-link" [href]="'http://' + slave.ip_addr" target="_blank" rel="noopener">{{ slave.ip_addr }}</a>
+          </div>
+        </nb-card-header>
+        <nb-card-body>
+          <div class="metric-grid">
+            <div class="metric-item">
+              <nb-icon icon="flash-outline" pack="eva" class="metric-icon"></nb-icon>
+              <span class="metric-label">{{ 'CLUSTER.HASHRATE' | translate }}</span>
+              <span class="metric-value">{{ formatHashrate(slave.hashrate) }}</span>
+            </div>
+            <div class="metric-item">
+              <nb-icon icon="thermometer-outline" pack="eva" class="metric-icon"></nb-icon>
+              <span class="metric-label">{{ 'CLUSTER.TEMP' | translate }}</span>
+              <span class="metric-value" [ngClass]="getTempClass(slave.temp)">
+                {{ slave.temp | number:'1.0-1' }}<small>°C</small>
+              </span>
+            </div>
+            <div class="metric-item">
+              <nb-icon icon="flash-outline" pack="eva" class="metric-icon"></nb-icon>
+              <span class="metric-label">{{ 'CLUSTER.POWER' | translate }}</span>
+              <span class="metric-value">{{ slave.power | number:'1.1-1' }} <small>W</small></span>
+            </div>
+            <div class="metric-item">
+              <nb-icon icon="activity-outline" pack="eva" class="metric-icon"></nb-icon>
+              <span class="metric-label">{{ 'CLUSTER.FREQUENCY' | translate }}</span>
+              <span class="metric-value">{{ slave.frequency | number:'1.0-0' }} <small>MHz</small></span>
+            </div>
+            <div class="metric-item">
+              <nb-icon icon="charging-outline" pack="eva" class="metric-icon"></nb-icon>
+              <span class="metric-label">{{ 'CLUSTER.VOLTAGE' | translate }}</span>
+              <span class="metric-value">{{ slave.core_voltage | number:'1.0-0' }} <small>mV</small></span>
+            </div>
+            <div class="metric-item">
+              <nb-icon icon="wind-outline" pack="eva" class="metric-icon"></nb-icon>
+              <span class="metric-label">{{ 'CLUSTER.FAN' | translate }}</span>
+              <span class="metric-value">{{ slave.fan_rpm | number:'1.0-0' }} <small>RPM</small></span>
+            </div>
+            <div class="metric-item">
+              <nb-icon icon="checkmark-circle-outline" pack="eva" class="metric-icon"></nb-icon>
+              <span class="metric-label">{{ 'CLUSTER.SHARES_ACCEPTED' | translate }}</span>
+              <span class="metric-value">{{ slave.shares_accepted | number:'1.0-0' }}</span>
+            </div>
+            <div class="metric-item">
+              <nb-icon icon="upload-outline" pack="eva" class="metric-icon"></nb-icon>
+              <span class="metric-label">Submitted</span>
+              <span class="metric-value">{{ slave.shares_submitted | number:'1.0-0' }}</span>
+            </div>
+            <div class="metric-item">
+              <nb-icon icon="flash-outline" pack="eva" class="metric-icon"></nb-icon>
+              <span class="metric-label">Vin</span>
+              <span class="metric-value">{{ slave.voltage_in | number:'1.2-2' }} <small>V</small></span>
+            </div>
+            <div class="metric-item">
+              <nb-icon icon="trending-down-outline" pack="eva" class="metric-icon"></nb-icon>
+              <span class="metric-label">Efficiency</span>
+              <span class="metric-value">{{ getDeviceEfficiency(slave.power, slave.hashrate) }}</span>
+            </div>
+          </div>
+
+          <!-- Slave Action Buttons -->
+          <div class="slave-actions">
+            <button nbButton status="basic" size="small" (click)="toggleSlaveConfig(slave)">
+              <nb-icon icon="settings-2-outline" pack="eva"></nb-icon>
+              {{ expandedSlaveId === slave.id ? 'Close Config' : 'Configure' }}
+            </button>
+            <button nbButton status="danger" size="small"
+                    [disabled]="restartingSlaveId === slave.id"
+                    (click)="restartSlave(slave)">
+              <nb-icon icon="refresh-outline" pack="eva"></nb-icon>
+              {{ restartingSlaveId === slave.id ? 'Restarting...' : 'Restart' }}
+            </button>
+          </div>
+
+          <!-- Per-Slave Config Panel -->
+          <div class="slave-config-panel" *ngIf="expandedSlaveId === slave.id && slaveConfigs[slave.id]">
+            <div class="slave-config-grid">
+              <div class="config-field">
+                <label>Frequency (MHz)</label>
+                <input nbInput type="number" size="small"
+                       [(ngModel)]="slaveConfigs[slave.id].frequency"
+                       min="100" max="800" />
+              </div>
+              <div class="config-field">
+                <label>Core Voltage (mV)</label>
+                <input nbInput type="number" size="small"
+                       [(ngModel)]="slaveConfigs[slave.id].coreVoltage"
+                       min="1000" max="1400" />
+              </div>
+              <div class="config-field">
+                <label>Fan Speed (%)</label>
+                <input nbInput type="number" size="small"
+                       [(ngModel)]="slaveConfigs[slave.id].fanSpeed"
+                       min="0" max="100" />
+              </div>
+              <div class="config-field">
+                <label>Fan Mode</label>
+                <nb-select [(selected)]="slaveConfigs[slave.id].fanMode" size="small">
+                  <nb-option [value]="0">Auto</nb-option>
+                  <nb-option [value]="1">Manual</nb-option>
+                </nb-select>
+              </div>
+              <div class="config-field">
+                <label>Target Temp (°C)</label>
+                <input nbInput type="number" size="small"
+                       [(ngModel)]="slaveConfigs[slave.id].targetTemp"
+                       min="30" max="80" />
+              </div>
+            </div>
+            <div class="slave-config-actions">
+              <button nbButton status="primary" size="small"
+                      [disabled]="savingSlaveId === slave.id"
+                      (click)="saveSlaveConfig(slave)">
+                <nb-icon icon="save-outline" pack="eva"></nb-icon>
+                {{ savingSlaveId === slave.id ? 'Sending...' : 'Apply' }}
+              </button>
+              <small class="config-note">Applied live — no restart needed</small>
+            </div>
+          </div>
+
+        </nb-card-body>
+      </nb-card>
+    </ng-container>
+
+    <ng-template #noSlaves>
+      <nb-card class="empty-state-card">
+        <nb-card-body class="empty-state">
+          <nb-icon icon="wifi-off-outline" pack="eva" class="empty-icon"></nb-icon>
+          <p>{{ 'CLUSTER.NO_SLAVES' | translate }}</p>
+        </nb-card-body>
+      </nb-card>
+    </ng-template>
+
+    <!-- Power Summary -->
+    <div class="power-summary">
+      <nb-icon icon="flash-outline" pack="eva"></nb-icon>
+      {{ 'CLUSTER.TOTAL_POWER' | translate }}: <strong>{{ getTotalPower() | number:'1.1-1' }} W</strong>
+      <span *ngIf="clusterStatus.transport" class="transport-badge">
+        <nb-icon icon="wifi-outline" pack="eva"></nb-icon>
+        {{ clusterStatus.transport | uppercase }}
+      </span>
+    </div>
+
+  </ng-container>
+
+  <!-- ==================== SLAVE MODE DASHBOARD ==================== -->
+  <ng-container *ngIf="!loading && clusterStatus?.mode === 'slave'">
+    <nb-card>
+      <nb-card-header>{{ 'CLUSTER.SLAVE_STATUS' | translate }}</nb-card-header>
+      <nb-card-body>
+        <div class="slave-status-panel">
+          <div class="connection-status">
+            <span class="status-dot" [class.connected]="clusterStatus.registered" [class.searching]="!clusterStatus.registered"></span>
+            <span class="connection-label">
+              {{ clusterStatus.registered ? ('CLUSTER.REGISTERED' | translate) : ('CLUSTER.SEARCHING_MASTER' | translate) }}
+            </span>
+          </div>
+          <div *ngIf="clusterStatus.registered" class="slave-id-display">
+            <span class="slave-id-label">{{ 'CLUSTER.SLAVE_ID' | translate }}</span>
+            <span class="slave-id-value">{{ clusterStatus.slave_id }}</span>
+          </div>
+          <p class="slave-info-msg">{{ 'CLUSTER.SLAVE_INFO_MSG' | translate }}</p>
+        </div>
+      </nb-card-body>
+    </nb-card>
+  </ng-container>
+
+</ng-container>

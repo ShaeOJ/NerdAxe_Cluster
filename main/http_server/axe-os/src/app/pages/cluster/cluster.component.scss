@@ -1,0 +1,496 @@
+@import '../../@theme/styles/themes';
+@import 'bootstrap/scss/mixins/breakpoints';
+
+@include nb-install-component() {
+
+// ── Config card ──
+.config-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.config-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  label {
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+}
+
+.channel-input {
+  width: 80px;
+}
+
+.config-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.restart-msg {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background-color: var(--color-warning-transparent-default);
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+// ── Disabled mode ──
+.disabled-body {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.disabled-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.5;
+}
+
+// ── Stats row (auto-fit to accommodate variable card count) ──
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+
+}
+
+.stat-card {
+  margin-bottom: 0;
+}
+
+.stat-card-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.25rem 0;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+
+  small {
+    font-size: 0.75rem;
+    font-weight: 400;
+  }
+}
+
+.stat-rejected {
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-top: 0.15rem;
+  white-space: nowrap;
+}
+
+// Stat icon circles
+.stat-icon-circle {
+  width: 2.5rem;
+  height: 2.5rem;
+  min-width: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+
+  &.bg-orange {
+    background-color: #fde0c2;
+    color: #f57c00;
+  }
+
+  &.bg-blue {
+    background-color: #cae6fc;
+    color: #2196f3;
+  }
+
+  &.bg-green {
+    background-color: #c8e6c9;
+    color: #388e3c;
+  }
+
+  &.bg-purple {
+    background-color: #e1bee7;
+    color: #7b1fa2;
+  }
+
+  &.bg-gold {
+    background-color: #fff9c4;
+    color: #f9a825;
+  }
+
+  &.bg-teal {
+    background-color: #b2dfdb;
+    color: #00796b;
+  }
+}
+
+// ── Device cards (master + slave) ──
+.device-card {
+  margin-bottom: 0.75rem;
+}
+
+.device-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.device-hostname {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.8;
+}
+
+// ── Slave card extras ──
+.slave-card {
+  border-left: 3px solid var(--color-primary-default, #3366ff);
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.slave-header-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.slave-hostname {
+  font-weight: 600;
+}
+
+.slave-ip {
+  font-size: 0.85rem;
+  opacity: 0.6;
+  font-family: monospace;
+}
+
+.slave-ip-link {
+  text-decoration: none;
+  color: inherit;
+
+  &:hover {
+    opacity: 1;
+    text-decoration: underline;
+  }
+}
+
+.slave-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+}
+
+.slave-last-seen {
+  font-size: 0.75rem;
+  opacity: 0.5;
+}
+
+// ── Slave action buttons row ──
+.slave-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--card-divider-color);
+}
+
+// ── Per-slave config panel ──
+.slave-config-panel {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  background: var(--background-basic-color-2, rgba(0, 0, 0, 0.03));
+  border: 1px solid var(--card-divider-color);
+}
+
+.slave-config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.slave-config-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.config-note {
+  opacity: 0.6;
+  font-size: 0.8rem;
+}
+
+// ── Metric grid (6-column, responsive) ──
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.75rem;
+
+  @media (max-width: 991px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (max-width: 575px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.metric-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0.5rem 0.25rem;
+  border-radius: 6px;
+  background: var(--card-background-color);
+  border: 1px solid var(--card-divider-color);
+}
+
+.metric-icon {
+  font-size: 1.1rem;
+  opacity: 0.5;
+  margin-bottom: 0.2rem;
+}
+
+.metric-label {
+  font-size: 0.7rem;
+  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 0.15rem;
+}
+
+.metric-value {
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+
+  small {
+    font-size: 0.7rem;
+    font-weight: 400;
+    opacity: 0.7;
+  }
+}
+
+// ── Temperature colors ──
+.temp-green {
+  color: var(--bs-green, #28a745);
+}
+
+.temp-orange {
+  color: var(--bs-orange, #fd7e14);
+}
+
+.temp-red {
+  color: var(--bs-red, #dc3545);
+}
+
+// ── Section header ──
+.section-header {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+
+  h6 {
+    margin: 0;
+    font-weight: 600;
+    opacity: 0.8;
+  }
+}
+
+// ── Empty state ──
+.empty-state-card {
+  margin-bottom: 0.75rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem 1rem;
+  opacity: 0.6;
+}
+
+.empty-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+// ── Power summary bar ──
+.power-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  margin-top: 0.25rem;
+  border-radius: 6px;
+  background: var(--card-background-color);
+  border: 1px solid var(--card-divider-color);
+  font-size: 0.95rem;
+}
+
+.transport-badge {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+// ── Watchdog card ──
+.watchdog-card {
+  margin-bottom: 0.75rem;
+  border-left: 3px solid var(--color-success-default, #00d68f);
+
+  &.watchdog-alert {
+    border-left-color: var(--color-danger-default, #ff3d71);
+  }
+}
+
+.watchdog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.watchdog-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.watchdog-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.watchdog-icon {
+  font-size: 1.2rem;
+  opacity: 0.4;
+
+  &.watchdog-icon-ok    { color: var(--color-success-default, #00d68f); opacity: 1; }
+  &.watchdog-icon-alert { color: var(--color-danger-default, #ff3d71);  opacity: 1; }
+}
+
+.watchdog-thresholds {
+  margin-bottom: 0.5rem;
+  opacity: 0.6;
+}
+
+.watchdog-device-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.3rem 0;
+  border-top: 1px solid var(--card-divider-color);
+  font-size: 0.9rem;
+}
+
+.watchdog-device-name {
+  min-width: 100px;
+  font-weight: 600;
+}
+
+.watchdog-temp,
+.watchdog-vin,
+.watchdog-freq {
+  min-width: 70px;
+  font-family: monospace;
+  font-size: 0.88rem;
+}
+
+// ── Slave mode dashboard ──
+.slave-status-panel {
+  padding: 0.5rem 0;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  min-width: 12px;
+  border-radius: 50%;
+  background-color: #aaa;
+
+  &.connected {
+    background-color: #28a745;
+    box-shadow: 0 0 6px rgba(40, 167, 69, 0.5);
+  }
+
+  &.searching {
+    background-color: #fd7e14;
+    animation: pulse 1.5s infinite;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.connection-label {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.slave-id-display {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--card-background-color);
+  border: 1px solid var(--card-divider-color);
+  border-radius: 6px;
+  display: inline-flex;
+}
+
+.slave-id-label {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.slave-id-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.slave-info-msg {
+  opacity: 0.6;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+}

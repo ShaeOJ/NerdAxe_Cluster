@@ -1,0 +1,59 @@
+<nb-card>
+  <nb-card-header>
+    <h5>{{ 'DESIGN.TITLE' | translate }}</h5>
+  </nb-card-header>
+  <nb-card-body>
+
+    <!-- Color Scheme -->
+    <div class="section">
+      <h6>{{ 'DESIGN.COLOR_SCHEME' | translate }}</h6>
+      <div class="scheme-buttons">
+        <button *ngFor="let scheme of colorSchemes"
+                class="scheme-btn"
+                [class.active]="settings.colorScheme === scheme.value"
+                (click)="selectColorScheme(scheme.value)">
+          {{ scheme.i18nKey | translate }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Accent Colors -->
+    <div class="section">
+      <h6>{{ 'DESIGN.ACCENT_COLORS' | translate }}</h6>
+      <div class="color-swatches">
+        <button *ngFor="let color of accentColors"
+                class="color-swatch"
+                [style.background-color]="color.hex"
+                [class.selected]="settings.accentColor === color.hex"
+                [title]="color.name"
+                (click)="selectAccentColor(color)">
+          <nb-icon *ngIf="settings.accentColor === color.hex"
+                   icon="checkmark-outline"
+                   class="check-icon">
+          </nb-icon>
+        </button>
+      </div>
+      <span class="accent-label">{{ settings.accentName }}</span>
+    </div>
+
+    <!-- Visual Effects -->
+    <div class="section">
+      <h6>{{ 'DESIGN.EFFECTS' | translate }}</h6>
+      <div class="toggle-row">
+        <nb-toggle [checked]="settings.pipboyEffects"
+                   (checkedChange)="toggleEffects($event)"
+                   status="primary">
+          {{ 'DESIGN.CRT_EFFECTS' | translate }}
+        </nb-toggle>
+      </div>
+      <div class="toggle-row">
+        <nb-toggle [checked]="settings.pipboyFont"
+                   (checkedChange)="toggleFont($event)"
+                   status="primary">
+          {{ 'DESIGN.PIPBOY_FONT' | translate }}
+        </nb-toggle>
+      </div>
+    </div>
+
+  </nb-card-body>
+</nb-card>

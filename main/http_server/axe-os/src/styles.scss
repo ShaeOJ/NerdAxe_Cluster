@@ -1,0 +1,748 @@
+/* ===== PIP-BOY / VAULT-TEC CRT EFFECTS ===== */
+
+/* --- CSS Custom Properties Defaults --- */
+:root {
+  --pipboy-accent: #14F593;
+  --pipboy-accent-rgb: 20, 245, 147;
+  --pipboy-accent-hover: #10c476;
+}
+
+/* ===== TRUE DEEP DARK MODE ===== */
+/* Override Nebular dark theme to use real blacks */
+.nb-theme-dark {
+  /* Layout */
+  nb-layout .layout {
+    background-color: #0a0a0f !important;
+  }
+  nb-layout .layout .layout-container {
+    background-color: #0a0a0f !important;
+  }
+  nb-layout .layout .layout-container .content .columns nb-layout-column {
+    background-color: #0a0a0f !important;
+  }
+
+  /* Sidebar */
+  nb-sidebar {
+    background-color: #0d0d14 !important;
+    border-right: 1px solid rgba(var(--pipboy-accent-rgb), 0.2) !important;
+  }
+  nb-sidebar .main-container {
+    background-color: #0d0d14 !important;
+  }
+
+  /* Header */
+  nb-layout-header nav {
+    background-color: #0d0d14 !important;
+    border-bottom: 1px solid rgba(var(--pipboy-accent-rgb), 0.15);
+  }
+
+  /* Cards — accent-outlined */
+  nb-card {
+    background-color: #0f0f18 !important;
+    border: 1px solid rgba(var(--pipboy-accent-rgb), 0.4) !important;
+    border-radius: 4px;
+  }
+  nb-card-header {
+    background-color: #0f0f18 !important;
+    border-bottom: 1px solid rgba(var(--pipboy-accent-rgb), 0.15) !important;
+  }
+  nb-card-body {
+    background-color: #0f0f18 !important;
+  }
+  nb-card-footer {
+    background-color: #0f0f18 !important;
+    border-top: 1px solid rgba(var(--pipboy-accent-rgb), 0.15) !important;
+  }
+
+  /* Menu — base text color only (hover/active handled in accent section below) */
+  nb-menu {
+    background-color: transparent !important;
+  }
+  nb-menu .menu-item a {
+    color: #8899aa !important;
+    background-color: transparent !important;
+  }
+
+  /* Inputs */
+  input[nbInput] {
+    background-color: #0a0a12 !important;
+    border-color: #1a1a28 !important;
+  }
+  textarea[nbInput] {
+    background-color: #0a0a12 !important;
+    border-color: #1a1a28 !important;
+  }
+
+  /* Select */
+  nb-select .select-button {
+    background-color: #0a0a12 !important;
+  }
+
+  /* General text */
+  color: #c8ccd0 !important;
+}
+
+/* Also darken cosmic slightly for consistency */
+.nb-theme-cosmic {
+  nb-layout .layout {
+    background-color: #100e24 !important;
+  }
+  nb-layout .layout .layout-container {
+    background-color: #100e24 !important;
+  }
+  nb-layout .layout .layout-container .content .columns nb-layout-column {
+    background-color: #100e24 !important;
+  }
+  nb-sidebar {
+    background-color: #13112a !important;
+    border-right: 1px solid rgba(var(--pipboy-accent-rgb), 0.2) !important;
+  }
+  nb-sidebar .main-container {
+    background-color: #13112a !important;
+  }
+  nb-layout-header nav {
+    background-color: #13112a !important;
+    border-bottom: 1px solid rgba(var(--pipboy-accent-rgb), 0.15);
+  }
+  nb-card {
+    background-color: #161433 !important;
+    border: 1px solid rgba(var(--pipboy-accent-rgb), 0.4) !important;
+    border-radius: 4px;
+  }
+  nb-card-header {
+    background-color: #161433 !important;
+    border-bottom: 1px solid rgba(var(--pipboy-accent-rgb), 0.15) !important;
+  }
+  nb-card-body {
+    background-color: #161433 !important;
+  }
+  nb-card-footer {
+    background-color: #161433 !important;
+    border-top: 1px solid rgba(var(--pipboy-accent-rgb), 0.15) !important;
+  }
+}
+
+
+/* ===== CRT SCANLINES ===== */
+/* Applied to body directly (not nb-layout) — Angular custom components may not render ::before/::after */
+
+/* Dark themes: visible accent-tinted scanlines */
+body.pipboy-effects:not(.pipboy-theme-light)::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 1px,
+    rgba(var(--pipboy-accent-rgb), 0.07) 1px,
+    rgba(var(--pipboy-accent-rgb), 0.07) 2px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Light theme: subtle grey scanlines */
+body.pipboy-effects.pipboy-theme-light::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 1px,
+    rgba(100, 100, 100, 0.06) 1px,
+    rgba(100, 100, 100, 0.06) 2px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* CRT vignette — subtle edge darkening for that monitor feel (dark themes only) */
+body.pipboy-effects:not(.pipboy-theme-light)::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    transparent 55%,
+    rgba(0, 0, 0, 0.25) 100%
+  );
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* ===== CARD GLOW + CRT SCANLINES ON CARDS (dark themes, effects enabled) ===== */
+body.pipboy-effects .nb-theme-cosmic nb-card,
+body.pipboy-effects .nb-theme-dark nb-card {
+  box-shadow: 0 0 15px rgba(var(--pipboy-accent-rgb), 0.12),
+              inset 0 0 30px rgba(var(--pipboy-accent-rgb), 0.02);
+  border: 1px solid rgba(var(--pipboy-accent-rgb), 0.35) !important;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+body.pipboy-effects .nb-theme-cosmic nb-card:hover,
+body.pipboy-effects .nb-theme-dark nb-card:hover {
+  box-shadow: 0 0 25px rgba(var(--pipboy-accent-rgb), 0.2),
+              inset 0 0 40px rgba(var(--pipboy-accent-rgb), 0.03);
+  border-color: rgba(var(--pipboy-accent-rgb), 0.5) !important;
+}
+
+body.pipboy-effects .nb-theme-cosmic nb-card::after,
+body.pipboy-effects .nb-theme-dark nb-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(var(--pipboy-accent-rgb), 0.04) 2px,
+    rgba(var(--pipboy-accent-rgb), 0.04) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+/* ===== HEADING TEXT-SHADOW (dark themes only) ===== */
+body.pipboy-effects .nb-theme-cosmic h1,
+body.pipboy-effects .nb-theme-cosmic h2,
+body.pipboy-effects .nb-theme-cosmic h3,
+body.pipboy-effects .nb-theme-cosmic h4,
+body.pipboy-effects .nb-theme-cosmic h5,
+body.pipboy-effects .nb-theme-cosmic h6,
+body.pipboy-effects .nb-theme-dark h1,
+body.pipboy-effects .nb-theme-dark h2,
+body.pipboy-effects .nb-theme-dark h3,
+body.pipboy-effects .nb-theme-dark h4,
+body.pipboy-effects .nb-theme-dark h5,
+body.pipboy-effects .nb-theme-dark h6 {
+  text-shadow: 0 0 10px rgba(var(--pipboy-accent-rgb), 0.35),
+               0 0 20px rgba(var(--pipboy-accent-rgb), 0.1);
+}
+
+/* ===== LINK GLOW (dark themes only) ===== */
+body.pipboy-effects .nb-theme-cosmic a:hover,
+body.pipboy-effects .nb-theme-dark a:hover {
+  text-shadow: 0 0 8px rgba(var(--pipboy-accent-rgb), 0.5);
+}
+
+/* ===== CRT FLICKER (dark themes, toggled via class) ===== */
+@keyframes crt-flicker {
+  0% { opacity: 1; }
+  5% { opacity: 0.94; }
+  10% { opacity: 1; }
+  15% { opacity: 0.96; }
+  20% { opacity: 1; }
+  50% { opacity: 1; }
+  55% { opacity: 0.97; }
+  60% { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+body.pipboy-effects.crt-flicker {
+  animation: crt-flicker 0.15s forwards;
+}
+
+/* ===== GLITCH EFFECTS ===== */
+.glitch-text {
+  position: relative;
+  animation: glitch-shake 0.3s forwards;
+}
+
+.glitch-text::before,
+.glitch-text::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: inherit;
+}
+
+.glitch-text::before {
+  left: 2px;
+  text-shadow: -2px 0 #ff0000;
+  clip-path: polygon(0 25%, 100% 25%, 100% 30%, 0 30%);
+  animation: glitch-anim 0.3s infinite linear alternate-reverse;
+}
+
+.glitch-text::after {
+  left: -2px;
+  text-shadow: 2px 0 #0000ff;
+  clip-path: polygon(0 65%, 100% 65%, 100% 70%, 0 70%);
+  animation: glitch-anim-2 0.4s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-shake {
+  0% { transform: skewX(0deg); }
+  25% { transform: skewX(5deg); }
+  50% { transform: skewX(-5deg); }
+  75% { transform: skewX(3deg); }
+  100% { transform: skewX(0deg); }
+}
+
+@keyframes glitch-anim {
+  0% { clip-path: polygon(0 0, 100% 0, 100% 5%, 0 5%); }
+  20% { clip-path: polygon(0 20%, 100% 20%, 100% 25%, 0 25%); }
+  40% { clip-path: polygon(0 40%, 100% 40%, 100% 45%, 0 45%); }
+  60% { clip-path: polygon(0 60%, 100% 60%, 100% 65%, 0 65%); }
+  80% { clip-path: polygon(0 80%, 100% 80%, 100% 85%, 0 85%); }
+  100% { clip-path: polygon(0 50%, 100% 50%, 100% 55%, 0 55%); }
+}
+
+@keyframes glitch-anim-2 {
+  0% { clip-path: polygon(0 5%, 100% 5%, 100% 10%, 0 10%); }
+  20% { clip-path: polygon(0 25%, 100% 25%, 100% 30%, 0 30%); }
+  40% { clip-path: polygon(0 45%, 100% 45%, 100% 50%, 0 50%); }
+  60% { clip-path: polygon(0 65%, 100% 65%, 100% 70%, 0 70%); }
+  80% { clip-path: polygon(0 85%, 100% 85%, 100% 90%, 0 90%); }
+  100% { clip-path: polygon(0 55%, 100% 55%, 100% 60%, 0 60%); }
+}
+
+/* Full screen glitch overlay */
+.glitch-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 10000;
+  animation: glitch-overlay-anim 0.2s forwards;
+}
+
+@keyframes glitch-overlay-anim {
+  0%   { background: transparent; transform: translate(0); }
+  20%  { background: rgba(255, 0, 0, 0.03); transform: translate(-2px, 1px); }
+  40%  { background: rgba(0, 255, 0, 0.02); transform: translate(2px, -1px); }
+  60%  { background: rgba(0, 0, 255, 0.03); transform: translate(-1px, 2px); }
+  80%  { background: rgba(255, 0, 255, 0.02); transform: translate(1px, -2px); }
+  100% { background: transparent; transform: translate(0); }
+}
+
+/* ===== TEXT SELECTION ===== */
+::selection {
+  background-color: rgba(var(--pipboy-accent-rgb), 0.3);
+  color: inherit;
+}
+
+/* ===== NEBULAR ACCENT COLOR OVERRIDES (dark + cosmic themes) ===== */
+/* Scoped within theme selectors for proper specificity over Nebular compiled SCSS */
+
+.nb-theme-dark,
+.nb-theme-cosmic {
+
+  /* --- Menu: rest state icons — dimmed accent tint --- */
+  nb-menu .menu-item .menu-icon {
+    color: rgba(var(--pipboy-accent-rgb), 0.45) !important;
+  }
+  nb-menu .menu-item .menu-icon svg,
+  nb-menu .menu-item .menu-icon svg * {
+    fill: rgba(var(--pipboy-accent-rgb), 0.45) !important;
+  }
+
+  /* --- Menu: hover --- */
+  nb-menu .menu-item a:hover,
+  nb-menu .menu-item a:hover .menu-title {
+    color: var(--pipboy-accent) !important;
+    background-color: rgba(var(--pipboy-accent-rgb), 0.08) !important;
+  }
+  nb-menu .menu-item a:hover .menu-icon {
+    color: var(--pipboy-accent) !important;
+    background-color: transparent !important;
+  }
+  nb-menu .menu-item a:hover .menu-icon svg,
+  nb-menu .menu-item a:hover .menu-icon svg * {
+    fill: var(--pipboy-accent) !important;
+  }
+
+  /* --- Menu: active (override ALL Nebular compiled green properties) --- */
+  nb-menu .menu-item a.active {
+    color: var(--pipboy-accent) !important;
+    background-color: rgba(var(--pipboy-accent-rgb), 0.06) !important;
+    border-left: 3px solid var(--pipboy-accent) !important;
+    padding-left: calc(0.75rem - 3px);
+  }
+  nb-menu .menu-item a.active .menu-title {
+    color: var(--pipboy-accent) !important;
+    background-color: transparent !important;
+  }
+  nb-menu .menu-item a.active .menu-icon {
+    color: var(--pipboy-accent) !important;
+    background-color: transparent !important;
+  }
+  nb-menu .menu-item a.active .menu-icon svg,
+  nb-menu .menu-item a.active .menu-icon svg * {
+    fill: var(--pipboy-accent) !important;
+  }
+  /* Kill any Nebular active:hover compiled green state */
+  nb-menu .menu-item a.active:hover {
+    color: var(--pipboy-accent) !important;
+    background-color: rgba(var(--pipboy-accent-rgb), 0.1) !important;
+  }
+  nb-menu .menu-item a.active:hover .menu-icon {
+    color: var(--pipboy-accent) !important;
+  }
+  nb-menu .menu-item a.active:hover .menu-icon svg,
+  nb-menu .menu-item a.active:hover .menu-icon svg * {
+    fill: var(--pipboy-accent) !important;
+  }
+
+  /* --- Primary buttons (filled) --- */
+  [nbButton].appearance-filled.status-primary {
+    background-color: var(--pipboy-accent) !important;
+    border-color: var(--pipboy-accent) !important;
+    color: #0a0a0f !important;
+  }
+
+  [nbButton].appearance-filled.status-primary:hover,
+  [nbButton].appearance-filled.status-primary:focus {
+    background-color: var(--pipboy-accent-hover) !important;
+    border-color: var(--pipboy-accent-hover) !important;
+  }
+
+  /* --- Outline buttons --- */
+  [nbButton].appearance-outline.status-primary {
+    border-color: var(--pipboy-accent) !important;
+    color: var(--pipboy-accent) !important;
+  }
+
+  [nbButton].appearance-outline.status-primary:hover {
+    background-color: rgba(var(--pipboy-accent-rgb), 0.15) !important;
+  }
+
+  /* --- Ghost buttons --- */
+  [nbButton].appearance-ghost.status-primary {
+    color: var(--pipboy-accent) !important;
+  }
+
+  [nbButton].appearance-ghost.status-primary:hover {
+    background-color: rgba(var(--pipboy-accent-rgb), 0.12) !important;
+    color: var(--pipboy-accent) !important;
+  }
+
+  [nbButton].appearance-ghost.status-primary:focus {
+    background-color: rgba(var(--pipboy-accent-rgb), 0.08) !important;
+    color: var(--pipboy-accent) !important;
+  }
+
+  /* --- Hero buttons --- */
+  [nbButton].appearance-hero.status-primary {
+    background-image: linear-gradient(
+      to right,
+      var(--pipboy-accent-hover),
+      var(--pipboy-accent)
+    ) !important;
+    border: none !important;
+    color: #0a0a0f !important;
+    box-shadow: 0 0 15px rgba(var(--pipboy-accent-rgb), 0.3) !important;
+  }
+
+  [nbButton].appearance-hero.status-primary:hover {
+    box-shadow: 0 0 25px rgba(var(--pipboy-accent-rgb), 0.45) !important;
+  }
+
+  /* --- Links --- */
+  a {
+    color: var(--pipboy-accent);
+  }
+
+  a:hover {
+    color: var(--pipboy-accent-hover);
+  }
+
+  /* --- Select dropdown --- */
+  nb-select.status-primary .select-button {
+    border-color: var(--pipboy-accent) !important;
+  }
+
+  nb-select.status-primary.open .select-button {
+    border-color: var(--pipboy-accent) !important;
+  }
+
+  nb-select.open .select-button,
+  nb-select:focus .select-button {
+    border-color: var(--pipboy-accent) !important;
+  }
+
+  /* --- Option list highlight --- */
+  nb-option.selected {
+    background-color: rgba(var(--pipboy-accent-rgb), 0.2) !important;
+    color: var(--pipboy-accent) !important;
+  }
+
+  nb-option:hover {
+    background-color: rgba(var(--pipboy-accent-rgb), 0.1) !important;
+  }
+
+  /* --- Badge --- */
+  nb-badge.status-primary {
+    background-color: var(--pipboy-accent) !important;
+    color: #0a0a0f !important;
+  }
+
+  nb-badge.status-info {
+    background-color: var(--pipboy-accent) !important;
+    color: #0a0a0f !important;
+  }
+
+  /* --- Toggle switch --- */
+  nb-toggle.status-primary .toggle.checked {
+    background-color: var(--pipboy-accent) !important;
+    border-color: var(--pipboy-accent) !important;
+  }
+
+  /* --- Checkbox --- */
+  nb-checkbox.status-primary .custom-checkbox.checked {
+    background-color: var(--pipboy-accent) !important;
+    border-color: var(--pipboy-accent) !important;
+  }
+
+  /* --- Radio --- */
+  nb-radio-group.status-primary .radio-circle.checked {
+    border-color: var(--pipboy-accent) !important;
+  }
+  nb-radio-group.status-primary .inner-circle {
+    background-color: var(--pipboy-accent) !important;
+  }
+
+  /* --- Spinner --- */
+  nb-spinner.status-primary .spin-circle {
+    border-top-color: var(--pipboy-accent) !important;
+    border-right-color: transparent;
+  }
+
+  /* --- Progress bar --- */
+  nb-progress-bar.status-primary .progress-value {
+    background-color: var(--pipboy-accent) !important;
+  }
+
+  /* --- Tab set --- */
+  nb-tabset .tab.active a {
+    color: var(--pipboy-accent) !important;
+  }
+
+  nb-tabset .tab.active a::before {
+    background-color: var(--pipboy-accent) !important;
+  }
+
+  nb-tabset .tab a:hover {
+    color: var(--pipboy-accent) !important;
+  }
+
+  /* --- Tooltip --- */
+  nb-tooltip.status-primary .content {
+    background: var(--pipboy-accent) !important;
+    color: #0a0a0f !important;
+  }
+
+  /* --- Input focus --- */
+  input[nbInput]:focus,
+  textarea[nbInput]:focus {
+    border-color: var(--pipboy-accent) !important;
+    box-shadow: 0 0 6px rgba(var(--pipboy-accent-rgb), 0.2);
+  }
+
+  /* --- Focus outlines (general) --- */
+  *:focus-visible {
+    outline-color: var(--pipboy-accent);
+  }
+
+  /* --- Accordion --- */
+  nb-accordion nb-accordion-item-header:hover {
+    color: var(--pipboy-accent) !important;
+  }
+
+  nb-accordion nb-accordion-item.expanded nb-accordion-item-header {
+    color: var(--pipboy-accent) !important;
+    border-bottom-color: rgba(var(--pipboy-accent-rgb), 0.2) !important;
+  }
+
+  /* --- List item hover --- */
+  nb-list-item:hover {
+    background-color: rgba(var(--pipboy-accent-rgb), 0.06) !important;
+  }
+
+  /* --- Scrollbar --- */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(var(--pipboy-accent-rgb), 0.3);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(var(--pipboy-accent-rgb), 0.5);
+  }
+}
+
+/* ===== LIGHT THEME ACCENT OVERRIDES ===== */
+/* Light theme needs darker accent variants for readability on white backgrounds */
+
+.nb-theme-default {
+
+  /* Menu rest-state icons — dimmed accent */
+  nb-menu .menu-item .menu-icon {
+    color: rgba(var(--pipboy-accent-rgb), 0.5) !important;
+  }
+  nb-menu .menu-item .menu-icon svg,
+  nb-menu .menu-item .menu-icon svg * {
+    fill: rgba(var(--pipboy-accent-rgb), 0.5) !important;
+  }
+
+  /* Menu hover + active */
+  nb-menu .menu-item a:hover,
+  nb-menu .menu-item a:hover .menu-title {
+    color: var(--pipboy-accent-hover) !important;
+  }
+  nb-menu .menu-item a:hover .menu-icon {
+    color: var(--pipboy-accent-hover) !important;
+  }
+  nb-menu .menu-item a:hover .menu-icon svg,
+  nb-menu .menu-item a:hover .menu-icon svg * {
+    fill: var(--pipboy-accent-hover) !important;
+  }
+
+  nb-menu .menu-item a.active,
+  nb-menu .menu-item a.active .menu-title {
+    color: var(--pipboy-accent-hover) !important;
+  }
+  nb-menu .menu-item a.active .menu-icon {
+    color: var(--pipboy-accent-hover) !important;
+  }
+  nb-menu .menu-item a.active .menu-icon svg,
+  nb-menu .menu-item a.active .menu-icon svg * {
+    fill: var(--pipboy-accent-hover) !important;
+  }
+
+  nb-menu .menu-item a.active {
+    border-left: 3px solid var(--pipboy-accent-hover);
+    padding-left: calc(0.75rem - 3px);
+  }
+
+  /* Primary buttons */
+  [nbButton].appearance-filled.status-primary {
+    background-color: var(--pipboy-accent-hover) !important;
+    border-color: var(--pipboy-accent-hover) !important;
+  }
+
+  [nbButton].appearance-outline.status-primary {
+    border-color: var(--pipboy-accent-hover) !important;
+    color: var(--pipboy-accent-hover) !important;
+  }
+
+  [nbButton].appearance-ghost.status-primary {
+    color: var(--pipboy-accent-hover) !important;
+  }
+
+  [nbButton].appearance-ghost.status-primary:hover {
+    background-color: rgba(var(--pipboy-accent-rgb), 0.1) !important;
+  }
+
+  [nbButton].appearance-hero.status-primary {
+    background-image: linear-gradient(
+      to right,
+      var(--pipboy-accent-hover),
+      var(--pipboy-accent)
+    ) !important;
+  }
+
+  /* Input focus */
+  input[nbInput]:focus,
+  textarea[nbInput]:focus {
+    border-color: var(--pipboy-accent-hover) !important;
+  }
+
+  /* Select */
+  nb-select.open .select-button,
+  nb-select:focus .select-button {
+    border-color: var(--pipboy-accent-hover) !important;
+  }
+
+  /* Tabs */
+  nb-tabset .tab.active a {
+    color: var(--pipboy-accent-hover) !important;
+  }
+  nb-tabset .tab.active a::before {
+    background-color: var(--pipboy-accent-hover) !important;
+  }
+  nb-tabset .tab a:hover {
+    color: var(--pipboy-accent-hover) !important;
+  }
+
+  /* Badge */
+  nb-badge.status-primary {
+    background-color: var(--pipboy-accent-hover) !important;
+  }
+  nb-badge.status-info {
+    background-color: var(--pipboy-accent-hover) !important;
+  }
+
+  /* Toggle / checkbox / radio */
+  nb-toggle.status-primary .toggle.checked {
+    background-color: var(--pipboy-accent-hover) !important;
+    border-color: var(--pipboy-accent-hover) !important;
+  }
+  nb-checkbox.status-primary .custom-checkbox.checked {
+    background-color: var(--pipboy-accent-hover) !important;
+    border-color: var(--pipboy-accent-hover) !important;
+  }
+  nb-radio-group.status-primary .radio-circle.checked {
+    border-color: var(--pipboy-accent-hover) !important;
+  }
+  nb-radio-group.status-primary .inner-circle {
+    background-color: var(--pipboy-accent-hover) !important;
+  }
+
+  /* Option list */
+  nb-option.selected {
+    background-color: rgba(var(--pipboy-accent-rgb), 0.15) !important;
+    color: var(--pipboy-accent-hover) !important;
+  }
+  nb-option:hover {
+    background-color: rgba(var(--pipboy-accent-rgb), 0.08) !important;
+  }
+
+  /* Progress bar */
+  nb-progress-bar.status-primary .progress-value {
+    background-color: var(--pipboy-accent-hover) !important;
+  }
+
+  /* Spinner */
+  nb-spinner.status-primary .spin-circle {
+    border-top-color: var(--pipboy-accent-hover) !important;
+    border-right-color: transparent;
+  }
+}
+
+/* ===== THEME-AWARE TEXT UTILITY CLASSES ===== */
+.text-accent {
+  color: var(--pipboy-accent) !important;
+}
+
+.text-accent-glow {
+  color: var(--pipboy-accent) !important;
+  text-shadow: 0 0 8px var(--pipboy-accent);
+}
