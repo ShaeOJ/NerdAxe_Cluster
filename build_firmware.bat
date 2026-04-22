@@ -1,6 +1,7 @@
 @echo off
 set IDF_PATH=C:\Users\onawa\esp\esp-idf
 set IDF_TOOLS_PATH=C:\Users\onawa\.espressif
+set PYTHONUTF8=1
 set BOARD=NERDAXE
 set LOGFILE=G:\Bitaxe Project\NerdAxe_Cluster\build_output.log
 
